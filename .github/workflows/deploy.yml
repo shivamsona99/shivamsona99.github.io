@@ -5,37 +5,31 @@ on:
     branches:
       - main
 
-  workflow_dispatch:
-
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
     steps:
-      # Checkout repository
-      - name: Checkout Code
+
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # Configure GitHub Pages
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
+      - name: Deploy
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
 
-      # Upload website files
-      - name: Upload Website
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: .
+          mkdir /tmp/website
+          cp -r index.html style.css script.js /tmp/website/
 
-      # Deploy website
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          git checkout --orphan gh-pages
+          git rm -rf .
+
+          cp -r /tmp/website/* .
+
+          git add .
+          git commit -m "Deploy static website"
+          git push -f origin gh-pages
